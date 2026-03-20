@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SÖDERVIK</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=Special+Elite&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- FADE OVERLAY -->
+<div id="fade-overlay"></div>
+
+<!-- TITLE -->
+<div id="title-screen">
+  <div class="ts-city">SÖDER<span>VIK</span></div>
+  <div class="ts-sub">En stad &nbsp;·&nbsp; Ett brott &nbsp;·&nbsp; En man</div>
+  <div class="ts-desc">En industristad på knä. En mördad pojke som ingen minns. En före detta polis som har förlorat allt — utom viljan att ta reda på sanningen.</div>
+  <button class="ts-btn" onclick="showIntro()">▶ &nbsp; Starta</button>
+</div>
+
+<!-- INTRO NARRATIVE -->
+<div id="intro-screen">
+  <div id="intro-chapter"></div>
+  <div id="intro-box">
+    <div id="intro-text"></div>
+    <div id="intro-progress"></div>
+    <button id="intro-next" onclick="nextIntroSlide()">▼ &nbsp; fortsätt</button>
+  </div>
+  <button id="intro-skip" onclick="launchGame()">Hoppa över intro ›</button>
+</div>
+
+<!-- GAME -->
+<div id="game">
+  <div id="hud">
+    <div style="display:flex;align-items:baseline;gap:12px;">
+      <div id="hud-title">SÖDER<span>VIK</span></div>
+      <div id="hud-chapter" style="font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);">—</div>
+    </div>
+    <div id="hud-loc">—</div>
+    <div id="hud-right">
+      <div id="sus-wrap">
+        <div id="sus-lbl">Misstanke</div>
+        <div id="sus-bar"><div id="sus-fill"></div></div>
+        <div id="sus-pct">0%</div>
+      </div>
+      <button class="hud-btn" id="pb-btn" onclick="togglePB()">📌 Korktavla</button>
+      <button class="hud-btn" id="search-btn" onclick="openSearch()">🔍 Sök</button>
+      <button class="hud-btn" id="sound-btn" onclick="toggleSoundMenu()">🎵 Ljud</button>
+    </div>
+  </div>
+  <div id="content">
+    <div id="sidebar">
+      <div class="sb-head">Platser</div>
+      <div id="loc-list"></div>
+      <div id="char-sidebar">
+        <div class="sb-head" style="margin-top:6px;">Karaktärer</div>
+        <div id="char-list"></div>
+      </div>
+    </div>
+    <div id="scene-wrap">
+      <div id="scene-hdr">
+        <div id="scene-loc-tag">—</div>
+        <div id="scene-title">—</div>
+        <div id="scene-time"></div>
+      </div>
+      <div id="scene-body">
+        <div id="scene-atm"></div>
+        <div id="scene-act-lbl">Tillgängliga åtgärder</div>
+        <div id="scene-acts"></div>
+      </div>
+
+      <!-- DIALOGUE OVERLAY -->
+      <div class="overlay" id="dlg-overlay">
+        <div id="dlg-char-bar">
+          <div id="dlg-portrait"></div>
+          <div id="dlg-info">
+            <div id="dlg-name"></div>
+            <div id="dlg-role"></div>
+          </div>
+          <div id="dlg-badge"><div id="dlg-badge-inner"></div></div>
+        </div>
+        <div id="dlg-rel-wrap">
+          <div id="dlg-rel-lbl">Förtroende</div>
+          <div id="dlg-rel-bar"><div id="dlg-rel-fill"></div></div>
+          <div id="dlg-rel-val"></div>
+          <div id="dlg-rel-mood"></div>
+        </div>
+        <div id="dlg-scroll">
+          <div id="dlg-bubble"></div>
+          <div id="dlg-opts"></div>
+          <div id="dlg-clue-flash"></div>
+        </div>
+        <div id="dlg-foot">
+          <button class="ov-back" onclick="closeDlg()">← Avsluta samtal</button>
+        </div>
+      </div>
+
+      <!-- EXAMINE OVERLAY -->
+      <div class="overlay" id="exam-overlay">
+        <div class="ov-hdr">
+          <button class="ov-back" onclick="closeExam()">← Tillbaka</button>
+          <div id="exam-icon"></div>
+          <div id="exam-title-text"></div>
+        </div>
+        <div class="ov-body">
+          <div id="exam-text"></div>
+          <div class="clue-box" id="exam-clue-box" style="display:none">
+            <div class="clue-box-text" id="exam-clue-txt"></div>
+          </div>
+          <button class="take-btn" id="exam-take" onclick="takeClue()" style="display:none">+ Lägg till på korktavlan</button>
+          <div class="taken-txt" id="exam-taken">✓ Tillagd på korktavlan</div>
+        </div>
+      </div>
+
+      <!-- FINAL CHOICE OVERLAY -->
+      <div class="overlay" id="final-overlay">
+        <div class="ov-hdr">
+          <div style="flex:1;font-family:'Playfair Display',serif;font-size:1rem;color:var(--red2);">
+            Södervik hamn — Sen natt — Slutet
+          </div>
+        </div>
+        <div class="ov-body" id="final-body"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- PIN BOARD -->
+<div id="pinboard">
+  <div id="pb-hdr">
+    <div id="pb-hdr-left">
+      <div id="pb-hdr-title">Jon Anderssons Korktavla</div>
+      <div id="pb-hdr-hint">— Utredning: Eriks Mord —</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div id="pb-mode-lbl">↕ Dra kort för att flytta &nbsp;·&nbsp; Klicka för att koppla &nbsp;·&nbsp; Högerklicka för info</div>
+      <button id="pb-close" onclick="togglePB()">✕ Stäng</button>
+    </div>
+  </div>
+  <div id="pb-board" onclick="pbBoardClick(event)">
+    <svg id="pb-svg"></svg>
+    <div id="pb-instruct"><span>Dra</span> kort för att flytta &nbsp;·&nbsp; <span>Klicka</span> för att koppla tråd &nbsp;·&nbsp; <span>Högerklicka</span> för info &nbsp;·&nbsp; <span>Klicka ✕</span> på tråd för att ta bort</div>
+    <!-- cards injected by JS -->
+    <div id="pb-detail">
+      <button id="pb-detail-close" onclick="closePbDetail()">✕</button>
+      <div id="pb-det-title"></div>
+      <div id="pb-det-type"></div>
+      <div id="pb-det-text"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SEARCH OVERLAY -->
+<div id="search-overlay">
+  <div id="search-box">
+    <div id="search-hdr">
+      <div id="search-hdr-title">🔍 &nbsp;Informationssökning</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div id="search-mode-badge" class="public">Offentlig sökning</div>
+        <button id="search-close-btn" onclick="closeSearch()">✕</button>
+      </div>
+    </div>
+    <div id="search-input-row">
+      <input id="search-input" type="text" placeholder="Sök på namn, plats eller organisation..." onkeydown="if(event.key==='Enter')doSearch()"/>
+      <button id="search-go" onclick="doSearch()">Sök →</button>
+    </div>
+    <div id="search-results">
+      <div id="search-results-inner">
+        <div class="sr-empty">Skriv ett namn eller nyckelord för att söka information om utredningen.</div>
+      </div>
+    </div>
+    <div id="search-terminal-unlock">
+      <div class="terminal-badge">⚠ Polisens terminal åtkomst: <span id="terminal-status-lbl">Låst</span></div>
+      <button class="terminal-toggle" id="terminal-toggle-btn" onclick="toggleTerminal()" style="display:none">Byt till polisens terminal</button>
+    </div>
+  </div>
+</div>
+
+<!-- POLICE BREAK-IN CONFIRM -->
+<div id="breakin-modal" style="position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--red);max-width:460px;width:90%;padding:28px;">
+    <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--red2);margin-bottom:14px;">⚠ Riskfylld handling</div>
+    <div style="font-size:.88rem;line-height:1.9;color:var(--text);margin-bottom:20px;">
+      Att ta sig in i polisens terminal utan behörighet är olagligt. Det kan leda till att <strong>Larsson tappar förtroende</strong> för dig och att polisen börjar hålla ögonen på dig.<br><br>
+      Men informationen på insidan kan vara det du behöver.
+    </div>
+    <!-- POLICE HACK MODAL -->
+<div id="hack-modal" style="position:fixed;inset:0;z-index:650;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid #38a;max-width:520px;width:92%;padding:22px 22px 18px;">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px;">
+      <div style="font-family:'Playfair Display',serif;font-size:1.05rem;color:#5af;">💻 Terminalåtkomst</div>
+      <button onclick="closeHack()" style="background:transparent;border:1px solid var(--border);color:var(--dim);font-family:'Special Elite',cursive;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;padding:5px 10px;cursor:pointer;">✕</button>
+    </div>
+
+    <div id="hack-sub" style="font-size:.82rem;line-height:1.8;color:var(--text);margin-bottom:14px;">
+      Ange enhetschefskod. Tryck <strong>SPACE</strong> när markören passerar mittlinjen.
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 12px;">
+      <div style="font-family:'Special Elite',cursive;font-size:.72rem;letter-spacing:.18em;color:var(--dim);text-transform:uppercase;">
+        Kod:
+        <span id="hack-code" style="color:var(--white);">LR82</span>
+      </div>
+      <div style="font-family:'Special Elite',cursive;font-size:.72rem;letter-spacing:.18em;color:var(--dim);text-transform:uppercase;">
+        Tecken:
+        <span id="hack-step" style="color:#5af;">1/4</span>
+      </div>
+    </div>
+
+    <div style="border:1px solid var(--border);background:var(--s2);padding:14px 12px;">
+      <div style="font-size:.62rem;letter-spacing:.18em;color:var(--dim);text-transform:uppercase;margin-bottom:8px;">
+        Timingspår
+      </div>
+      <div id="hack-track" style="position:relative;height:22px;border:1px solid var(--border);background:rgba(255,255,255,.02);overflow:hidden;">
+        <div style="position:absolute;left:50%;top:0;bottom:0;width:2px;background:#5af;opacity:.65;"></div>
+        <div id="hack-marker" style="position:absolute;left:0;top:0;bottom:0;width:10px;background:rgba(90,170,255,.35);border-right:1px solid rgba(90,170,255,.8);"></div>
+        <div id="hack-window" style="position:absolute;left:50%;transform:translateX(-50%);top:0;bottom:0;width:56px;border-left:1px dashed rgba(90,170,255,.45);border-right:1px dashed rgba(90,170,255,.45);"></div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
+        <div id="hack-target" style="font-family:'Playfair Display',serif;font-size:1.25rem;color:var(--white);">
+          Tryck för: <span style="color:#5af" id="hack-char">L</span>
+        </div>
+        <div id="hack-msg" style="font-size:.78rem;color:var(--dim);font-style:italic;">—</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:14px;">
+      <button onclick="startHack()" style="background:transparent;border:1px solid #38a;color:#5af;font-family:'Special Elite',cursive;font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;padding:10px 14px;cursor:pointer;flex:1;">
+        ▶ Starta hack
+      </button>
+      <button onclick="closeHack()" style="background:transparent;border:1px solid var(--border);color:var(--dim);font-family:'Special Elite',cursive;font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;padding:10px 14px;cursor:pointer;flex:1;">
+        Avbryt
+      </button>
+    </div>
+
+    <div style="margin-top:10px;font-size:.7rem;color:var(--dim);line-height:1.7;">
+      <span style="color:#5af;">Tips:</span> Du får 4 försök (ett per tecken). Misslyckande kan öka misstanke.
+    </div>
+  </div>
+</div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="confirmBreakIn()" style="background:transparent;border:1px solid var(--red);color:var(--red2);font-family:'Special Elite',cursive;font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;padding:10px 20px;cursor:pointer;flex:1;transition:all .2s;" onmouseover="this.style.background='var(--red)';this.style.color='var(--white)'" onmouseout="this.style.background='transparent';this.style.color='var(--red2)'">Ta risken — bryt dig in</button>
+      <button onclick="document.getElementById('breakin-modal').style.display='none'" style="background:transparent;border:1px solid var(--border);color:var(--dim);font-family:'Special Elite',cursive;font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;padding:10px 20px;cursor:pointer;flex:1;transition:all .2s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--dim)'">Dra dig tillbaka</button>
+    </div>
+  </div>
+</div>
+
+<!-- END SCREEN -->
+<div id="end-screen">
+  <div id="end-bg-word"></div>
+  <div id="end-ep">Epilog</div>
+  <div id="end-title"></div>
+  <div id="end-text"></div>
+  <div id="end-quote"></div>
+  <button class="end-restart" onclick="restartGame()">↺ Spela igen</button>
+</div>
+
+<!-- NOTIFY -->
+<div id="notif"></div>
+
+<script src="js/data.js"></script>
+<script src="js/game.js"></script>
+<!-- BACKGROUND MUSIC -->
+<audio id="bgm" loop preload="auto">
+  <source src="audio/Swedish City Shadows.mp3" type="audio/mpeg">
+</audio>
+<!-- SOUND MENU -->
+<div id="sound-menu" style="
+  position:fixed;
+  top:58px;
+  right:18px;
+  z-index:9500;
+  width:250px;
+  display:none;
+  background:var(--surface);
+  border:1px solid var(--border);
+  box-shadow:0 20px 60px rgba(0,0,0,.65);
+">
+  <div style="padding:14px 14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-family:'Playfair Display',serif;font-size:.95rem;color:var(--white);">🎵 Swedish City Shadows</div>
+    <button onclick="toggleSoundMenu()" style="background:transparent;border:1px solid var(--border);color:var(--dim);padding:4px 10px;cursor:pointer;">✕</button>
+  </div>
+
+  <div style="padding:12px 14px 14px;">
+    <div style="font-size:.55rem;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);margin-bottom:8px;">
+      Bakgrundsmusik
+    </div>
+
+    <input id="bgm-vol" type="range" min="0" max="1" step="0.01" value="0.5" style="width:100%;">
+
+    <div style="display:flex;gap:10px;margin-top:12px;">
+      <button id="bgm-mute-btn" onclick="toggleMuteBGM()" style="
+        flex:1;background:transparent;border:1px solid var(--border);color:var(--dim);
+        font-family:'Special Elite',cursive;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;
+        padding:8px 10px;cursor:pointer;
+      ">Mute</button>
+
+      <button onclick="testPlayBGM()" style="
+        flex:1;background:transparent;border:1px solid var(--gold);color:var(--gold2);
+        font-family:'Special Elite',cursive;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;
+        padding:8px 10px;cursor:pointer;
+      ">Spela</button>
+    </div>
+
+    <div style="margin-top:10px;font-size:.72rem;color:var(--dim);line-height:1.7;">
+      Musiken startar när spelaren klickar (webbläsarregel).
+    </div>
+  </div>
+</div>
+</body>
+</html>
